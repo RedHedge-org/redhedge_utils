@@ -15,7 +15,7 @@ def get_mongo_uri():
 
 
 def is_local():
-    """check if the function is running locally"""
+    """check if the function is running locally."""
     if "ENVIRONMENT" not in os.environ:
         return False
     return os.environ["ENVIRONMENT"] == "local"
