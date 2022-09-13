@@ -12,3 +12,10 @@ def get_mongo_uri():
     with open("/var/openfaas/secrets/mongo-uri") as f:
         uri = f.read()
     return uri
+
+
+def is_local():
+    """check if the function is running locally"""
+    if "ENVIRONMENT" not in os.environ:
+        return False
+    return os.environ["ENVIRONMENT"] == "local"
