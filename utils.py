@@ -3,6 +3,7 @@ from dotenv import load_dotenv
 
 load_dotenv()
 
+_KEY_LOCAL_ENVIRONMENT = "local"
 
 def get_mongo_uri():
     """get the mongo-uri from the open-faas secrets or from .env file"""
@@ -16,6 +17,4 @@ def get_mongo_uri():
 
 def is_local():
     """check if the function is running locally."""
-    if "ENVIRONMENT" not in os.environ:
-        return False
-    return os.environ["ENVIRONMENT"] == "local"
+    return os.environ.get("ENVIRONMENT", None) == _KEY_LOCAL_ENVIRONMENT
