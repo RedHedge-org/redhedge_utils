@@ -1,9 +1,11 @@
 import os
+
 from dotenv import load_dotenv
 
 load_dotenv()
 
 _KEY_LOCAL_ENVIRONMENT = "local"
+
 
 def get_mongo_uri():
     """get the mongo-uri from the open-faas secrets or from .env file"""
