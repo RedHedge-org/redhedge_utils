@@ -42,8 +42,8 @@ def bdp_wrapper(tickers = [], fields = [], YAS_YIELD_FLAG=None):
         raise Exception("bloomberg-api-url is not set")
     payload = json.dumps({"tickers": tickers, "fields": fields, "YAS_YIELD_FLAG": YAS_YIELD_FLAG})
     response = requests.post(url, data=payload)
-    return response.json()
-    
+    df = pd.DataFrame(response.json())
+    return df
 
 def get_dataframe_from_csv_string(csv_content: str, **kwargs) -> pd.DataFrame:
     """
