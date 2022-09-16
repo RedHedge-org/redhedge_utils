@@ -1,8 +1,9 @@
 import json
 import os
-from urllib import response
-import pandas as pd
 import requests 
+from io import StringIO
+
+import pandas as pd
 from dotenv import load_dotenv
 
 load_dotenv()
@@ -23,6 +24,7 @@ def is_local():
     """check if the function is running locally."""
     return os.environ.get("ENVIRONMENT", None) == _KEY_LOCAL_ENVIRONMENT
 
+
 def get_env(env_name):
     """get the environment variable from the open-faas secrets or from .env file"""
     env = os.environ.get(env_name, None)
@@ -42,3 +44,12 @@ def bdp_wrapper(tickers = [], fields = [], YAS_YIELD_FLAG=None):
     response = requests.post(url, data=payload)
     return response.json()
     
+
+def get_dataframe_from_csv_string(csv_content: str, **kwargs) -> pd.DataFrame:
+    """
+    Convert a CSV string in a DataFrame.
+
+    Takes the same kwargs accepted by ``pandas.read_csv``.
+    """
+    csv_content = StringIO(csv_content)
+    return pd.read_csv(csv_content, **kwargs)
