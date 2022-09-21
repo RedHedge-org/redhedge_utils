@@ -12,6 +12,12 @@ load_dotenv()
 _KEY_LOCAL_ENVIRONMENT = "local"
 
 
+class UnconfiguredEnvironment(Exception):
+    """
+    Raised when a needed environment variable is not set
+    """
+
+
 def get_mongo_uri():
     """get the mongo-uri from the open-faas secrets or from .env file"""
     uri = os.environ.get("MONGO_URI", None)
@@ -48,14 +54,21 @@ def get_env(env_name):
 
 def bdp_wrapper(tickers=[], fields=[], YAS_YIELD_FLAG=None):
     """wrapper for the function to check if the function is running locally or not"""
-    url = get_env("bloomberg-api-url")
-    if url is None:
-        raise Exception("bloomberg-api-url is not set")
-    payload = json.dumps(
-        {"tickers": tickers, "fields": fields, "YAS_YIELD_FLAG": YAS_YIELD_FLAG}
-    )
-    response = requests.post(url, data=payload)
-    df = pd.DataFrame(response.json())
+    env_var = "bloomberg-api-url"
+    url = get_env(env_var)
+    if url is not None:
+        payload = json.dumps(
+            {"tickers": tickers, "fields": fields, "YAS_YIELD_FLAG": YAS_YIELD_FLAG}
+        )
+        response = requests.post(url, data=payload)
+        df = pd.DataFrame(response.json())
+    else:
+        if is_local():
+            df = pd.DataFrame()
+        else:
+            raise UnconfiguredEnvironment(
+                f"`{env_var}` environment variable is not set"
+            )
     return df
 
 
