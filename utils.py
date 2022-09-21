@@ -1,8 +1,9 @@
 import json
 import os
-import requests 
+import requests
 from io import StringIO
 
+import pymongo
 import pandas as pd
 from dotenv import load_dotenv
 
@@ -20,6 +21,17 @@ def get_mongo_uri():
     return uri
 
 
+def get_pnl_db(use_test_db: bool = False) -> pymongo.database.Database:
+    """Get the PNL database"""
+    uri = get_mongo_uri()
+    client = pymongo.MongoClient(uri)
+    if not use_test_db:
+        db = client.pnl
+    else:
+        db = client.pnl_test_local
+    return db
+
+
 def is_local():
     """check if the function is running locally."""
     return os.environ.get("ENVIRONMENT", None) == _KEY_LOCAL_ENVIRONMENT
@@ -33,17 +45,21 @@ def get_env(env_name):
             env = f.read()
     return env
 
-def bdp_wrapper(tickers = [], fields = [], YAS_YIELD_FLAG=None):
+
+def bdp_wrapper(tickers=[], fields=[], YAS_YIELD_FLAG=None):
     """wrapper for the function to check if the function is running locally or not"""
     if is_local():
         return pd.DataFrame.empty
     url = get_env("bloomberg-api-url")
     if url is None:
         raise Exception("bloomberg-api-url is not set")
-    payload = json.dumps({"tickers": tickers, "fields": fields, "YAS_YIELD_FLAG": YAS_YIELD_FLAG})
+    payload = json.dumps(
+        {"tickers": tickers, "fields": fields, "YAS_YIELD_FLAG": YAS_YIELD_FLAG}
+    )
     response = requests.post(url, data=payload)
     df = pd.DataFrame(response.json())
     return df
+
 
 def get_dataframe_from_csv_string(csv_content: str, **kwargs) -> pd.DataFrame:
     """
