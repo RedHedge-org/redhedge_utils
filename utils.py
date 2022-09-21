@@ -52,19 +52,38 @@ def get_env(env_name):
     return env
 
 
+def _get_blg_df_random(tickers: list = [], fields: list = []) -> pd.DataFrame:
+    import numpy as np
+
+    n_tickers = len(tickers)
+    n_fields = len(fields)
+    rng = np.random.default_rng()
+    df = pd.DataFrame(
+        data=rng.random((n_tickers, n_fields)),
+        index=tickers,
+        columns=fields,
+    )
+
+
+def _get_blg_df_from_api(
+    url: str, tickers: list = [], fields: list = [], YAS_YIELD_FLAG=None
+) -> pd.DataFrame:
+    payload = json.dumps(
+        {"tickers": tickers, "fields": fields, "YAS_YIELD_FLAG": YAS_YIELD_FLAG}
+    )
+    response = requests.post(url, data=payload)
+    df = pd.DataFrame(response.json())
+
+
 def bdp_wrapper(tickers=[], fields=[], YAS_YIELD_FLAG=None):
     """wrapper for the function to check if the function is running locally or not"""
     env_var = "bloomberg-api-url"
     url = get_env(env_var)
     if url is not None:
-        payload = json.dumps(
-            {"tickers": tickers, "fields": fields, "YAS_YIELD_FLAG": YAS_YIELD_FLAG}
-        )
-        response = requests.post(url, data=payload)
-        df = pd.DataFrame(response.json())
+        df = _get_blg_df_from_api(url=url, tickers=tickers, fields=fields)
     else:
         if is_local():
-            df = pd.DataFrame()
+            df = _get_blg_df_random(tickers=tickers, fields=fields)
         else:
             raise UnconfiguredEnvironment(
                 f"`{env_var}` environment variable is not set"
