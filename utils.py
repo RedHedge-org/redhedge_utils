@@ -11,10 +11,18 @@ load_dotenv()
 
 _KEY_LOCAL_ENVIRONMENT = "local"
 
+_DEFAULT_REQUESTS_TIMEOUT = 10
+
 
 class UnconfiguredEnvironment(Exception):
     """
     Raised when a needed environment variable is not set
+    """
+
+
+class UnableToConnect(Exception):
+    """
+    Raised for generic connection errors
     """
 
 
@@ -71,7 +79,10 @@ def _get_blg_df_from_api(
     payload = json.dumps(
         {"tickers": tickers, "fields": fields, "YAS_YIELD_FLAG": YAS_YIELD_FLAG}
     )
-    response = requests.post(url, data=payload)
+    try:
+        response = requests.post(url, data=payload, timeout=_DEFAULT_REQUESTS_TIMEOUT)
+    except requests.exceptions.ConnectTimeout as exc:
+        raise UnableToConnect("Connection timed out")
     df = pd.DataFrame(response.json())
     return df
 
