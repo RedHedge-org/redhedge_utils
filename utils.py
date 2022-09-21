@@ -73,6 +73,7 @@ def _get_blg_df_from_api(
     )
     response = requests.post(url, data=payload)
     df = pd.DataFrame(response.json())
+    return df
 
 
 def bdp_wrapper(tickers=[], fields=[], YAS_YIELD_FLAG=None):
