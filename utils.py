@@ -48,8 +48,6 @@ def get_env(env_name):
 
 def bdp_wrapper(tickers=[], fields=[], YAS_YIELD_FLAG=None):
     """wrapper for the function to check if the function is running locally or not"""
-    if is_local():
-        return pd.DataFrame.empty
     url = get_env("bloomberg-api-url")
     if url is None:
         raise Exception("bloomberg-api-url is not set")
