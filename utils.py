@@ -1,5 +1,6 @@
 import json
 import os
+import re
 from io import StringIO
 
 import pandas as pd
@@ -111,3 +112,12 @@ def get_dataframe_from_csv_string(csv_content: str, **kwargs) -> pd.DataFrame:
     """
     csv_content = StringIO(csv_content)
     return pd.read_csv(csv_content, **kwargs)
+
+
+pattern_security_type_suffix = re.compile(
+    r" (?P<security_type>Comdty|Corp|Govt|Equity|Curncy)"
+)
+
+
+def correlation_id_to_isin(correlation_id: str) -> str:
+    return pattern_security_type_suffix.sub("", correlation_id)
