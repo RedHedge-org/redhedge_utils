@@ -2,6 +2,7 @@ import json
 import os
 import re
 from io import StringIO
+from zoneinfo import ZoneInfo
 
 import pandas as pd
 import pymongo
@@ -13,6 +14,8 @@ load_dotenv()
 _KEY_LOCAL_ENVIRONMENT = "local"
 
 _DEFAULT_REQUESTS_TIMEOUT = 10
+
+DEFAULT_TIMEZONE = ZoneInfo("Europe/London")
 
 
 class UnconfiguredEnvironment(Exception):
