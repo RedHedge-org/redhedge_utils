@@ -110,6 +110,11 @@ def bdh_wrapper(tickers=[], fields=[], start_date=None, end_date=None):
     """wrapper for the function to check if the function is running locally or not"""
     env_var = "bloomberg-api-url"
     url = get_env(env_var) +"/timeseries"
+    print("getting data from url: ", url)
+    print("tickers: ", tickers)
+    print("fields: ", fields)
+    print("start_date: ", start_date)
+    print("end_date: ", end_date)
     response = requests.post(url, json={"tickers": tickers, "fields": fields, "start_date": start_date, "end_date": end_date})
     # the response looks like this:
     # {
