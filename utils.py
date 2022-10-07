@@ -146,7 +146,7 @@ def bdh_wrapper(tickers=[], fields=[], start_date=None, end_date=None):
         isin, field = key.replace("(", "").replace(")", "").replace("'", "").split(",")
         df_temp = pd.DataFrame.from_dict(value, orient="index", columns=[field])
         df_temp.index = pd.to_datetime(df_temp.index, unit="ms")
-        df_temp["isin"] = isin
+        df_temp["isin"] = correlation_id_to_isin(isin)
         df = df.append(df_temp)
     df = df.reset_index().rename(columns={"index": "date"})
     return df
