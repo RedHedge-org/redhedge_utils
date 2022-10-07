@@ -133,17 +133,21 @@ def bdh_wrapper(tickers=[], fields=[], start_date=None, end_date=None):
     #         "1665100800000": 73.165
     #     }
     # }
-    # we want a dataframe like this:
-    #                 BE6334364708 Corp  BE6328904428 Corp
-    # 1664755200000               88.946               73.27
-    # 1664841600000               89.186               74.00
-    print("got response")
-    print(response.json())
-    df = pd.DataFrame.from_dict(response.json(), orient="index")
-    df.columns = [correlation_id_to_isin(col) for col in df.columns]
-    df.index = pd.to_datetime(df.index, unit="ms")
-    df.index.name = "date"
-    df = df.sort_index()
+    # convert the response to be saved as a timeseries in mongo
+    # example:
+    #  {
+    #   "date": ISODate("2020-01-03T05:00:00.000Z"),
+    #   "isin": "BE6334364708"
+    #   "price": 88.946
+    #  }
+    df = pd.DataFrame()
+    for key, value in response.json().items():
+        isin, field = key.replace("(", "").replace(")", "").replace("'", "").split(",")
+        df_temp = pd.DataFrame.from_dict(value, orient="index", columns=[field])
+        df_temp.index = pd.to_datetime(df_temp.index, unit="ms")
+        df_temp["isin"] = isin
+        df = df.append(df_temp)
+    df = df.reset_index().rename(columns={"index": "date"})
     return df
     
     
