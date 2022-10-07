@@ -106,6 +106,42 @@ def bdp_wrapper(tickers=[], fields=[], YAS_YIELD_FLAG=None):
             )
     return df
 
+def bdh_wrapper(tickers=[], fields=[], start_date=None, end_date=None):
+    """wrapper for the function to check if the function is running locally or not"""
+    env_var = "bloomberg-api-url"
+    url = get_env(env_var) +"/timeseries"
+    response = requests.post(url, json={"tickers": tickers, "fields": fields, "start_date": start_date, "end_date": end_date})
+    # the response looks like this:
+    # {
+    #     "('BE6334364708 Corp', 'Last_Price')": {
+    #         "1664755200000": 88.946,
+    #         "1664841600000": 89.186,
+    #         "1664928000000": 89.051,
+    #         "1665014400000": 89.035,
+    #         "1665100800000": 88.961
+    #     },
+    #     "('BE6328904428 Corp', 'Last_Price')": {
+    #         "1664755200000": 73.27,
+    #         "1664841600000": 74.0,
+    #         "1664928000000": 73.577,
+    #         "1665014400000": 73.453,
+    #         "1665100800000": 73.165
+    #     }
+    # }
+    # we want a dataframe like this:
+    #                 BE6334364708 Corp  BE6328904428 Corp
+    # 1664755200000               88.946               73.27
+    # 1664841600000               89.186               74.00
+    print("got response")
+    print(response.json())
+    df = pd.DataFrame.from_dict(response.json(), orient="index")
+    df.columns = [correlation_id_to_isin(col) for col in df.columns]
+    return df
+    
+    
+
+
+
 
 def get_dataframe_from_csv_string(csv_content: str, **kwargs) -> pd.DataFrame:
     """
