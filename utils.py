@@ -141,6 +141,9 @@ def bdh_wrapper(tickers=[], fields=[], start_date=None, end_date=None):
     print(response.json())
     df = pd.DataFrame.from_dict(response.json(), orient="index")
     df.columns = [correlation_id_to_isin(col) for col in df.columns]
+    df.index = pd.to_datetime(df.index, unit="ms")
+    df.index.name = "date"
+    df = df.sort_index()
     return df
     
     
