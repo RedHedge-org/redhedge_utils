@@ -138,6 +138,7 @@ def bdh_wrapper(tickers=[], fields=[], start_date=None, end_date=None):
     #  {
     #   "date": ISODate("2020-01-03T05:00:00.000Z"),
     #   "isin": "BE6334364708"
+    #   "i_spread": 0.24,
     #   "price": 88.946
     #  }
     df = pd.DataFrame()
