@@ -104,16 +104,25 @@ def bdp_wrapper(tickers=[], fields=[], YAS_YIELD_FLAG=None):
             )
     return df
 
+
 def bdh_wrapper(tickers=[], fields=[], start_date=None, end_date=None):
     """wrapper for the function to check if the function is running locally or not"""
     env_var = "bloomberg-api-url"
-    url = get_env(env_var) +"/timeseries"
+    url = get_env(env_var) + "/timeseries"
     print("getting data from url: ", url)
     print("tickers: ", tickers)
     print("fields: ", fields)
     print("start_date: ", start_date)
     print("end_date: ", end_date)
-    response = requests.post(url, json={"tickers": tickers, "fields": fields, "start_date": start_date, "end_date": end_date})
+    response = requests.post(
+        url,
+        json={
+            "tickers": tickers,
+            "fields": fields,
+            "start_date": start_date,
+            "end_date": end_date,
+        },
+    )
     # the response looks like this:
     # {
     #     "('BE6334364708 Corp', 'Last_Price')": {
@@ -149,10 +158,6 @@ def bdh_wrapper(tickers=[], fields=[], start_date=None, end_date=None):
         df = df.append(df_temp)
     df = df.reset_index().rename(columns={"index": "date"})
     return df
-    
-    
-
-
 
 
 def get_dataframe_from_csv_string(csv_content: str, **kwargs) -> pd.DataFrame:
