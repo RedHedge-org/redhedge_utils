@@ -106,6 +106,56 @@ def bdp_wrapper(tickers=[], fields=[], YAS_YIELD_FLAG=None):
             )
     return df
 
+def bdh_wrapper(tickers=[], fields=[], start_date=None, end_date=None):
+    """wrapper for the function to check if the function is running locally or not"""
+    env_var = "bloomberg-api-url"
+    url = get_env(env_var) +"/timeseries"
+    print("getting data from url: ", url)
+    print("tickers: ", tickers)
+    print("fields: ", fields)
+    print("start_date: ", start_date)
+    print("end_date: ", end_date)
+    response = requests.post(url, json={"tickers": tickers, "fields": fields, "start_date": start_date, "end_date": end_date})
+    # the response looks like this:
+    # {
+    #     "('BE6334364708 Corp', 'Last_Price')": {
+    #         "1664755200000": 88.946,
+    #         "1664841600000": 89.186,
+    #         "1664928000000": 89.051,
+    #         "1665014400000": 89.035,
+    #         "1665100800000": 88.961
+    #     },
+    #     "('BE6328904428 Corp', 'Last_Price')": {
+    #         "1664755200000": 73.27,
+    #         "1664841600000": 74.0,
+    #         "1664928000000": 73.577,
+    #         "1665014400000": 73.453,
+    #         "1665100800000": 73.165
+    #     }
+    # }
+    # convert the response to be saved as a timeseries in mongo
+    # example:
+    #  {
+    #   "date": ISODate("2020-01-03T05:00:00.000Z"),
+    #   "isin": "BE6334364708"
+    #   "i_spread": 0.24,
+    #   "price": 88.946
+    #  }
+    df = pd.DataFrame()
+    for key, value in response.json().items():
+        isin, field = key.replace("(", "").replace(")", "").replace("'", "").split(",")
+        field = field.strip()
+        df_temp = pd.DataFrame.from_dict(value, orient="index", columns=[field])
+        df_temp.index = pd.to_datetime(df_temp.index, unit="ms")
+        df_temp["isin"] = correlation_id_to_isin(isin)
+        df = df.append(df_temp)
+    df = df.reset_index().rename(columns={"index": "date"})
+    return df
+    
+    
+
+
+
 
 def get_dataframe_from_csv_string(csv_content: str, **kwargs) -> pd.DataFrame:
     """
