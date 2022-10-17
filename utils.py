@@ -124,3 +124,7 @@ pattern_security_type_suffix = re.compile(
 
 def correlation_id_to_isin(correlation_id: str) -> str:
     return pattern_security_type_suffix.sub("", correlation_id)
+
+
+if __name__ == "__main__":
+    print("Done!")
