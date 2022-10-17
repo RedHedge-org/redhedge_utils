@@ -15,8 +15,6 @@ _KEY_LOCAL_ENVIRONMENT = "local"
 
 _DEFAULT_REQUESTS_TIMEOUT = 10
 
-DEFAULT_TIMEZONE = ZoneInfo("Europe/London")
-
 
 class UnconfiguredEnvironment(Exception):
     """
