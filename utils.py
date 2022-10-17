@@ -130,4 +130,12 @@ def correlation_id_to_isin(correlation_id: str) -> str:
 
 
 if __name__ == "__main__":
+    correlation_ids_with_expected_isins = {
+        "GB00BDCHBW80 Govt": "GB00BDCHBW80",
+        "FR0014006ZC4@BGN Corp": "FR0014006ZC4",
+        "G Z2 Comdty": "G Z2",
+    }
+    for correlation_id, expected_isin in correlation_ids_with_expected_isins.items():
+        found_isin = correlation_id_to_isin(correlation_id)
+        assert expected_isin == found_isin
     print("Done!")
