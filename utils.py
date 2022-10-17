@@ -117,13 +117,13 @@ def get_dataframe_from_csv_string(csv_content: str, **kwargs) -> pd.DataFrame:
     return pd.read_csv(csv_content, **kwargs)
 
 
-pattern_security_type_suffix = re.compile(
+PATTERN_CORRELATION_ID = re.compile(
     r"^(?P<isin>\w+ ?\w+)(@(?P<price_source>\w+))? (?P<security_type>Comdty|Corp|Govt|Equity|Curncy)$"
 )
 
 
 def correlation_id_to_isin(correlation_id: str) -> str:
-    if matched := pattern_security_type_suffix.match(correlation_id):
+    if matched := PATTERN_CORRELATION_ID.match(correlation_id):
         return matched.group("isin")
     else:
         raise ValueError("Unable to match the Correlation ID", correlation_id)
