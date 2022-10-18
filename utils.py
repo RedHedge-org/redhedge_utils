@@ -171,7 +171,7 @@ def get_dataframe_from_csv_string(csv_content: str, **kwargs) -> pd.DataFrame:
 
 
 PATTERN_CORRELATION_ID = re.compile(
-    r"^(?P<isin>\w+ ?\w+)(@(?P<price_source>\w+))? (?P<security_type>Comdty|Corp|Govt|Equity|Curncy|Index)$"
+    r"^(?P<isin>\w[\w\s]+\w)(@(?P<price_source>\w+))? (?P<security_type>Comdty|Corp|Govt|Equity|Curncy|Index)$"
 )
 
 
@@ -188,6 +188,7 @@ if __name__ == "__main__":
         "FR0014006ZC4@BGN Corp": "FR0014006ZC4",
         "G Z2 Comdty": "G Z2",
         "GECU10Y Index": "GECU10Y",
+        "ITRX XOVER CDSI GEN 5Y Corp": "ITRX XOVER CDSI GEN 5Y",
     }
     for correlation_id, expected_isin in correlation_ids_with_expected_isins.items():
         found_isin = correlation_id_to_isin(correlation_id)
