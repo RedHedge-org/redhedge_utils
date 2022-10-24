@@ -182,6 +182,28 @@ def correlation_id_to_isin(correlation_id: str) -> str:
         raise ValueError("Unable to match the Correlation ID", correlation_id)
 
 
+_MAP_SECURITY_TYPE_BLOOMBERG_SUFFIX = {
+    "Bond Corporate": "Corp",
+    "Future": "Comdty",
+    "Bond Sovereign": "Govt",
+}
+
+
+def get_correlation_id(row: pd.Series) -> str:
+    security_type = row["security_instrument_type_rh"]
+    isin = row["isin"]
+    pricing_source = "security_default_pricing_source_rh"
+    bloomberg_suffix = _MAP_SECURITY_TYPE_BLOOMBERG_SUFFIX.get(security_type, None)
+    if security_type == "Bond Corporate":
+        correlation_id = f"{isin}@{pricing_source} {bloomberg_suffix}"
+    else:
+        if bloomberg_suffix is not None:
+            correlation_id = f"{isin} {bloomberg_suffix}"
+        else:
+            correlation_id = isin
+    return correlation_id
+
+
 if __name__ == "__main__":
     correlation_ids_with_expected_isins = {
         "GB00BDCHBW80 Govt": "GB00BDCHBW80",
