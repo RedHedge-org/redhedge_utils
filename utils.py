@@ -174,9 +174,13 @@ PATTERN_CORRELATION_ID = re.compile(
     r"^(?P<isin>\w[\w\s]+\w)(@(?P<price_source>\w+))? (?P<security_type>Comdty|Corp|Govt|Equity|Curncy|Index)$"
 )
 
+PATTERN_CDS_CORRELATION_ID = re.compile(r"^(?P<isin>\w+)_(?P<info>\w+)$")
+
 
 def correlation_id_to_isin(correlation_id: str) -> str:
     if matched := PATTERN_CORRELATION_ID.match(correlation_id):
+        return matched.group("isin")
+    elif matched := PATTERN_CDS_CORRELATION_ID.match(correlation_id):
         return matched.group("isin")
     else:
         raise ValueError("Unable to match the Correlation ID", correlation_id)
@@ -211,6 +215,7 @@ if __name__ == "__main__":
         "G Z2 Comdty": "G Z2",
         "GECU10Y Index": "GECU10Y",
         "ITRX XOVER CDSI GEN 5Y Corp": "ITRX XOVER CDSI GEN 5Y",
+        "CY349216_271220": "CY349216",
     }
     for correlation_id, expected_isin in correlation_ids_with_expected_isins.items():
         found_isin = correlation_id_to_isin(correlation_id)
