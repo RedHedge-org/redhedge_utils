@@ -43,9 +43,13 @@ def get_data_frame_from_latest_email(subject):
     email = get_latest_email(subject)
     msg = email_parser.Parser().parsestr(email.decode("utf-8"))
     payload = None
+    df = None
     for part in msg.get_payload():
         payload = part.get_payload(decode=True)
-        if len(payload) > 0:
+        try:
+            df = pd.read_csv(StringIO(payload.decode("utf-8")))
+        except Exception as exc:
+            pass
+        if df is not None:
             break
-    df = pd.read_csv(StringIO(payload.decode("utf-8")))
     return df
