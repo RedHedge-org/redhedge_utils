@@ -208,6 +208,18 @@ def get_correlation_id(row: pd.Series) -> str:
     return correlation_id
 
 
+_PATTERN_STRATEGY_CODE = re.compile(r"^(?P<book>[\w ]+?)(_(?P<portfolio>TRS\w+))?$")
+
+
+def get_portfolio_from_strategy_code(strategy_code: str) -> str:
+    matched = _PATTERN_STRATEGY_CODE.match(strategy_code)
+    portfolio = matched.group("portfolio")
+    if portfolio is None:
+        return "MAIN"
+    else:
+        return portfolio
+
+
 if __name__ == "__main__":
     correlation_ids_with_expected_isins = {
         "GB00BDCHBW80 Govt": "GB00BDCHBW80",
@@ -220,4 +232,18 @@ if __name__ == "__main__":
     for correlation_id, expected_isin in correlation_ids_with_expected_isins.items():
         found_isin = correlation_id_to_isin(correlation_id)
         assert expected_isin == found_isin
+
+    strategy_codes_with_expected_portfolios = {
+        "VOON": "MAIN",
+        "SEMINARA": "MAIN",
+        "SEMINARA_TRSB": "TRSB",
+        "SEMINARA_TRS1": "TRS1",
+        "SUB INC": "MAIN",
+    }
+    for (
+        strategy_code,
+        expected_portfolio,
+    ) in strategy_codes_with_expected_portfolios.items():
+        found_portfolio = get_portfolio_from_strategy_code(strategy_code)
+        assert expected_portfolio == found_portfolio
     print("Done!")
