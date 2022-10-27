@@ -193,18 +193,36 @@ _MAP_SECURITY_TYPE_BLOOMBERG_SUFFIX = {
 }
 
 
-def get_correlation_id(row: pd.Series) -> str:
-    security_type = row["security_instrument_type_rh"]
-    isin = row["isin"]
-    pricing_source = row["security_default_pricing_source_rh"]
+def create_correlation_id(
+    isin: str, security_type: str, pricing_source: str = None
+) -> str:
+    """
+    Create a Correlation ID from ISIN, security type, and pricing source.
+
+    The pricing source is included in the Correlation ID only for
+    securities of type 'Bond Corporate'.
+    """
     bloomberg_suffix = _MAP_SECURITY_TYPE_BLOOMBERG_SUFFIX.get(security_type, None)
     if security_type == "Bond Corporate":
-        correlation_id = f"{isin}@{pricing_source} {bloomberg_suffix}"
+        if pricing_source is not None:
+            correlation_id = f"{isin}@{pricing_source} {bloomberg_suffix}"
+        else:
+            correlation_id = f"{isin} {bloomberg_suffix}"
     else:
         if bloomberg_suffix is not None:
             correlation_id = f"{isin} {bloomberg_suffix}"
         else:
             correlation_id = isin
+    return correlation_id
+
+
+def get_correlation_id(row: pd.Series) -> str:
+    security_type = row["security_instrument_type_rh"]
+    isin = row["isin"]
+    pricing_source = row["security_default_pricing_source_rh"]
+    correlation_id = create_correlation_id(
+        isin=isin, security_type=security_type, pricing_source=pricing_source
+    )
     return correlation_id
 
 
@@ -232,6 +250,16 @@ if __name__ == "__main__":
     for correlation_id, expected_isin in correlation_ids_with_expected_isins.items():
         found_isin = correlation_id_to_isin(correlation_id)
         assert expected_isin == found_isin
+
+    assert "FR0014006ZC4@BGN Corp" == create_correlation_id(
+        isin="FR0014006ZC4", security_type="Bond Corporate", pricing_source="BGN"
+    )
+    assert "GB00BDCHBW80 Govt" == create_correlation_id(
+        isin="GB00BDCHBW80", security_type="Bond Sovereign", pricing_source="BGN"
+    )
+    assert "G Z2 Comdty" == create_correlation_id(
+        isin="G Z2", security_type="Future", pricing_source="BGN"
+    )
 
     strategy_codes_with_expected_portfolios = {
         "VOON": "MAIN",
