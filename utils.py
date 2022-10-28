@@ -202,18 +202,25 @@ def create_correlation_id(
     The pricing source is included in the Correlation ID only for
     securities of type 'Bond Corporate'.
     """
-    bloomberg_suffix = _MAP_SECURITY_TYPE_BLOOMBERG_SUFFIX.get(security_type, None)
-    if security_type == "Bond Corporate":
-        if pricing_source is not None:
-            correlation_id = f"{isin}@{pricing_source} {bloomberg_suffix}"
+    try:
+        bloomberg_suffix = _MAP_SECURITY_TYPE_BLOOMBERG_SUFFIX.get(security_type, None)
+        if security_type == "Bond Corporate":
+            if pricing_source is not None:
+                correlation_id = f"{isin}@{pricing_source} {bloomberg_suffix}"
+            else:
+                correlation_id = f"{isin} {bloomberg_suffix}"
         else:
-            correlation_id = f"{isin} {bloomberg_suffix}"
+            if bloomberg_suffix is not None:
+                correlation_id = f"{isin} {bloomberg_suffix}"
+            else:
+                correlation_id = isin
+    except Exception as exc:
+        raise ValueError(
+            "Unable to create a Correlation ID for "
+            f"{isin=}, {security_type=}, and {pricing_source=}"
+        )
     else:
-        if bloomberg_suffix is not None:
-            correlation_id = f"{isin} {bloomberg_suffix}"
-        else:
-            correlation_id = isin
-    return correlation_id
+        return correlation_id
 
 
 def get_correlation_id(row: pd.Series) -> str:
@@ -251,15 +258,20 @@ if __name__ == "__main__":
         found_isin = correlation_id_to_isin(correlation_id)
         assert expected_isin == found_isin
 
-    assert "FR0014006ZC4@BGN Corp" == create_correlation_id(
-        isin="FR0014006ZC4", security_type="Bond Corporate", pricing_source="BGN"
-    )
-    assert "GB00BDCHBW80 Govt" == create_correlation_id(
-        isin="GB00BDCHBW80", security_type="Bond Sovereign", pricing_source="BGN"
-    )
-    assert "G Z2 Comdty" == create_correlation_id(
-        isin="G Z2", security_type="Future", pricing_source="BGN"
-    )
+    correlation_ids_with_components = {
+        "FR0014006ZC4@BGN Corp": ("FR0014006ZC4", "Bond Corporate", "BGN"),
+        "GB00BDCHBW80 Govt": ("GB00BDCHBW80", "Bond Sovereign", "BGN"),
+        "G Z2 Comdty": ("G Z2", "Future", "BGN"),
+    }
+    for expected_correlation_id, (
+        isin,
+        security_type,
+        pricing_source,
+    ) in correlation_ids_with_components.items():
+        found_correlation_id = create_correlation_id(
+            isin=isin, security_type=security_type, pricing_source=pricing_source
+        )
+        assert expected_correlation_id == found_correlation_id
 
     strategy_codes_with_expected_portfolios = {
         "VOON": "MAIN",
