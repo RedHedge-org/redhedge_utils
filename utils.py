@@ -238,6 +238,13 @@ def get_portfolio_from_strategy_code(strategy_code: str) -> str:
         return portfolio
 
 
+_PATTERN_WHITESPACES = re.compile(r"\s+")
+
+
+def nullify_whitespaces(df: pd.DataFrame) -> None:
+    df.replace({_PATTERN_WHITESPACES: None}, inplace=True)
+
+
 if __name__ == "__main__":
     correlation_ids_with_expected_isins = {
         "GB00BDCHBW80 Govt": "GB00BDCHBW80",
