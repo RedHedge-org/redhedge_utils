@@ -193,22 +193,66 @@ _MAP_SECURITY_TYPE_BLOOMBERG_SUFFIX = {
 }
 
 
-def get_correlation_id(row: pd.Series, ignore_pricing_source: bool = False) -> str:
+def create_correlation_id(
+    isin: str,
+    security_type: str,
+    pricing_source: str = None,
+    ignore_pricing_source: bool = False,
+) -> str:
+    """
+    Create a Correlation ID from ISIN, security type, and pricing source.
+
+    The pricing source is included in the Correlation ID only for
+    securities of type 'Bond Corporate'.
+    """
+    try:
+        bloomberg_suffix = _MAP_SECURITY_TYPE_BLOOMBERG_SUFFIX.get(security_type, None)
+        if security_type == "Bond Corporate":
+            if (pricing_source is not None) and (not ignore_pricing_source):
+                correlation_id = f"{isin}@{pricing_source} {bloomberg_suffix}"
+            else:
+                correlation_id = f"{isin} {bloomberg_suffix}"
+        else:
+            if bloomberg_suffix is not None:
+                correlation_id = f"{isin} {bloomberg_suffix}"
+            else:
+                correlation_id = isin
+    except Exception as exc:
+        raise ValueError(
+            "Unable to create a Correlation ID for "
+            f"{isin=}, {security_type=}, and {pricing_source=}"
+        )
+    else:
+        return correlation_id
+
+
+def get_correlation_id(row: pd.Series) -> str:
     security_type = row["security_instrument_type_rh"]
     isin = row["isin"]
     pricing_source = row["security_default_pricing_source_rh"]
-    bloomberg_suffix = _MAP_SECURITY_TYPE_BLOOMBERG_SUFFIX.get(security_type, None)
-    if security_type == "Bond Corporate":
-        if not ignore_pricing_source:
-            correlation_id = f"{isin}@{pricing_source} {bloomberg_suffix}"
-        else:
-            correlation_id = f"{isin} {bloomberg_suffix}"
-    else:
-        if bloomberg_suffix is not None:
-            correlation_id = f"{isin} {bloomberg_suffix}"
-        else:
-            correlation_id = isin
+    correlation_id = create_correlation_id(
+        isin=isin, security_type=security_type, pricing_source=pricing_source
+    )
     return correlation_id
+
+
+_PATTERN_STRATEGY_CODE = re.compile(r"^(?P<book>[\w ]+?)(_(?P<portfolio>TRS\w+))?$")
+
+
+def get_portfolio_from_strategy_code(strategy_code: str) -> str:
+    matched = _PATTERN_STRATEGY_CODE.match(strategy_code)
+    portfolio = matched.group("portfolio")
+    if portfolio is None:
+        return "MAIN"
+    else:
+        return portfolio
+
+
+_PATTERN_WHITESPACES = re.compile(r"\s+")
+
+
+def nullify_whitespaces(df: pd.DataFrame) -> None:
+    df.replace({_PATTERN_WHITESPACES: None}, inplace=True)
 
 
 if __name__ == "__main__":
@@ -223,4 +267,33 @@ if __name__ == "__main__":
     for correlation_id, expected_isin in correlation_ids_with_expected_isins.items():
         found_isin = correlation_id_to_isin(correlation_id)
         assert expected_isin == found_isin
+
+    correlation_ids_with_components = {
+        "FR0014006ZC4@BGN Corp": ("FR0014006ZC4", "Bond Corporate", "BGN"),
+        "GB00BDCHBW80 Govt": ("GB00BDCHBW80", "Bond Sovereign", "BGN"),
+        "G Z2 Comdty": ("G Z2", "Future", "BGN"),
+    }
+    for expected_correlation_id, (
+        isin,
+        security_type,
+        pricing_source,
+    ) in correlation_ids_with_components.items():
+        found_correlation_id = create_correlation_id(
+            isin=isin, security_type=security_type, pricing_source=pricing_source
+        )
+        assert expected_correlation_id == found_correlation_id
+
+    strategy_codes_with_expected_portfolios = {
+        "VOON": "MAIN",
+        "SEMINARA": "MAIN",
+        "SEMINARA_TRSB": "TRSB",
+        "SEMINARA_TRS1": "TRS1",
+        "SUB INC": "MAIN",
+    }
+    for (
+        strategy_code,
+        expected_portfolio,
+    ) in strategy_codes_with_expected_portfolios.items():
+        found_portfolio = get_portfolio_from_strategy_code(strategy_code)
+        assert expected_portfolio == found_portfolio
     print("Done!")
