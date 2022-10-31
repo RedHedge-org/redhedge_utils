@@ -226,12 +226,15 @@ def create_correlation_id(
         return correlation_id
 
 
-def get_correlation_id(row: pd.Series) -> str:
+def get_correlation_id(row: pd.Series, ignore_pricing_source: bool = False) -> str:
     security_type = row["security_instrument_type_rh"]
     isin = row["isin"]
     pricing_source = row["security_default_pricing_source_rh"]
     correlation_id = create_correlation_id(
-        isin=isin, security_type=security_type, pricing_source=pricing_source
+        isin=isin,
+        security_type=security_type,
+        pricing_source=pricing_source,
+        ignore_pricing_source=ignore_pricing_source,
     )
     return correlation_id
 
