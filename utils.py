@@ -193,13 +193,16 @@ _MAP_SECURITY_TYPE_BLOOMBERG_SUFFIX = {
 }
 
 
-def get_correlation_id(row: pd.Series) -> str:
+def get_correlation_id(row: pd.Series, ignore_pricing_source: bool = False) -> str:
     security_type = row["security_instrument_type_rh"]
     isin = row["isin"]
     pricing_source = row["security_default_pricing_source_rh"]
     bloomberg_suffix = _MAP_SECURITY_TYPE_BLOOMBERG_SUFFIX.get(security_type, None)
     if security_type == "Bond Corporate":
-        correlation_id = f"{isin}@{pricing_source} {bloomberg_suffix}"
+        if not ignore_pricing_source:
+            correlation_id = f"{isin}@{pricing_source} {bloomberg_suffix}"
+        else:
+            correlation_id = f"{isin} {bloomberg_suffix}"
     else:
         if bloomberg_suffix is not None:
             correlation_id = f"{isin} {bloomberg_suffix}"
