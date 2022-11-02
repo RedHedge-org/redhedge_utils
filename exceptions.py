@@ -11,6 +11,6 @@ def get_exception_info(exc: Exception) -> dict:
     """
     return {
         "message": str(exc),
-        "type": type(exc),
+        "type": str(type(exc)),
         "lineno": exc.__traceback__.tb_lineno,
     }
