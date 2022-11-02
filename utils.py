@@ -32,7 +32,7 @@ def get_mongo_uri():
     """get the mongo-uri from the open-faas secrets or from .env file"""
     uri = os.environ.get("MONGO_URI", None)
     if uri is None:
-        with open("/var/openfaas/secrets/mongo-uri") as f:
+        with open("/var/openfaas/secrets/k8s-mongo-uri") as f:
             uri = f.read()
     return uri
 
