@@ -183,7 +183,7 @@ def correlation_id_to_isin(correlation_id: str) -> str:
     elif matched := PATTERN_CDS_CORRELATION_ID.match(correlation_id):
         return matched.group("isin")
     else:
-        raise correlation_id
+        return correlation_id
 
 
 _MAP_SECURITY_TYPE_BLOOMBERG_SUFFIX = {
