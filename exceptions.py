@@ -1,6 +1,9 @@
 """
 Utilities to handle exceptions
 """
+import traceback
+
+_LIMIT_STACK = 5
 
 
 def get_exception_info(exc: Exception) -> dict:
@@ -12,5 +15,5 @@ def get_exception_info(exc: Exception) -> dict:
     return {
         "message": str(exc),
         "type": str(type(exc)),
-        "lineno": exc.__traceback__.tb_lineno,
+        "stack": traceback.format_exception(exc, limit=_LIMIT_STACK),
     }
