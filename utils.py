@@ -276,10 +276,13 @@ if __name__ == "__main__":
         "GB00BDCHBW80 Govt": ("GB00BDCHBW80", "Bond Sovereign", "BGN"),
         "G Z2 Comdty": ("G Z2", "Future", "BGN"),
     }
-    for expected_correlation_id, (
-        isin,
-        security_type,
-        pricing_source,
+    for (
+        expected_correlation_id,
+        (
+            isin,
+            security_type,
+            pricing_source,
+        ),
     ) in correlation_ids_with_components.items():
         found_correlation_id = create_correlation_id(
             isin=isin, security_type=security_type, pricing_source=pricing_source
