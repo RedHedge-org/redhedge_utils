@@ -303,3 +303,42 @@ if __name__ == "__main__":
         found_portfolio = get_portfolio_from_strategy_code(strategy_code)
         assert expected_portfolio == found_portfolio
     print("Done!")
+
+TEAMS_WEBHOOK = get_env("teams-webhook")
+def teams_message(msg = '', type = 'info', title = '', url = ''):
+    """
+    Send a message to Microsoft Teams channel
+    """
+    if not msg:
+        return
+    if not title:
+        title = 'Message from Python'
+    if type == 'info':
+        color = '0076D7'
+    elif type == 'error':
+        color = 'FF0000'
+    elif type == 'success':
+        color = '008000'
+    else:
+        color = '000000'
+    data = {
+        "@type": "MessageCard",
+        "@context": "http://schema.org/extensions",
+        "themeColor": color,
+        "title": title,
+        "text": msg,
+        "potentialAction": [
+            {
+                "@type": "OpenUri",
+                "name": "Open Link",
+                "targets": [
+                    {
+                        "os": "default",
+                        "uri": url
+                    }
+                ]
+            }
+        ]
+    }
+    headers = {'Content-Type': 'application/json'}
+    requests.post(TEAMS_WEBHOOK, data = json.dumps(data), headers = headers)
