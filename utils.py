@@ -190,6 +190,8 @@ _MAP_SECURITY_TYPE_BLOOMBERG_SUFFIX = {
     "Bond Corporate": "Corp",
     "Future": "Comdty",
     "Bond Sovereign": "Govt",
+    "Credit Default Swap": "Curncy",
+    "CDS Index Swap": "Curncy",
 }
 
 
