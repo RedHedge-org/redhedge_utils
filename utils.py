@@ -171,7 +171,7 @@ def get_dataframe_from_csv_string(csv_content: str, **kwargs) -> pd.DataFrame:
 
 
 PATTERN_CORRELATION_ID = re.compile(
-    r"^(?P<isin>\w[\w\s]+\w)(@(?P<price_source>\w+))? (?P<security_type>Comdty|Corp|Govt|Equity|Curncy|Index)$"
+    r"^(?P<isin>\w[\w\s]+\w)(@(?P<price_source>\w+))?\s+(?P<security_type>Comdty|Corp|Govt|Equity|Curncy|Index)$"
 )
 
 PATTERN_CDS_CORRELATION_ID = re.compile(r"^(?P<isin>\w+)_(?P<info>\w+)$")
@@ -262,6 +262,8 @@ def nullify_whitespaces(df: pd.DataFrame) -> None:
 
 if __name__ == "__main__":
     correlation_ids_with_expected_isins = {
+        "ITXEX538  Curncy": "ITXEX538",
+        "CBAR1E5 Curncy": "CBAR1E5",
         "GB00BDCHBW80 Govt": "GB00BDCHBW80",
         "FR0014006ZC4@BGN Corp": "FR0014006ZC4",
         "G Z2 Comdty": "G Z2",
@@ -307,22 +309,24 @@ if __name__ == "__main__":
     print("Done!")
 
 TEAMS_WEBHOOK = get_env("teams-webhook")
-def teams_message(msg = '', type = 'info', title = '', url = ''):
+
+
+def teams_message(msg="", type="info", title="", url=""):
     """
     Send a message to Microsoft Teams channel
     """
     if not msg:
         return
     if not title:
-        title = 'Message from Python'
-    if type == 'info':
-        color = '0076D7'
-    elif type == 'error':
-        color = 'FF0000'
-    elif type == 'success':
-        color = '008000'
+        title = "Message from Python"
+    if type == "info":
+        color = "0076D7"
+    elif type == "error":
+        color = "FF0000"
+    elif type == "success":
+        color = "008000"
     else:
-        color = '000000'
+        color = "000000"
     data = {
         "@type": "MessageCard",
         "@context": "http://schema.org/extensions",
@@ -333,14 +337,9 @@ def teams_message(msg = '', type = 'info', title = '', url = ''):
             {
                 "@type": "OpenUri",
                 "name": "Open Link",
-                "targets": [
-                    {
-                        "os": "default",
-                        "uri": url
-                    }
-                ]
+                "targets": [{"os": "default", "uri": url}],
             }
-        ]
+        ],
     }
-    headers = {'Content-Type': 'application/json'}
-    requests.post(TEAMS_WEBHOOK, data = json.dumps(data), headers = headers)
+    headers = {"Content-Type": "application/json"}
+    requests.post(TEAMS_WEBHOOK, data=json.dumps(data), headers=headers)
