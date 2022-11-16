@@ -8,6 +8,8 @@ import pandas as pd
 import pymongo
 import requests
 from dotenv import load_dotenv
+import traceback
+import datetime
 
 load_dotenv()
 
@@ -80,6 +82,19 @@ def _get_blg_df_from_api(
 ) -> pd.DataFrame:
     payload = json.dumps(
         {"tickers": tickers, "fields": fields, "YAS_YIELD_FLAG": YAS_YIELD_FLAG}
+    )
+    call_trace = traceback.extract_stack()
+    call_trace = f"{'\n'.join(traceback.format_list(call_trace[-5:]))}"
+    db = get_pnl_db()
+    db.bloomberg_call_logs.insert_one(
+        {
+            "timestamp": datetime.datetime.utcnow(),
+            "hits": len(tickers) * len(fields),
+            "tickers": tickers,
+            "fields": fields,
+            "YAS_YIELD_FLAG": YAS_YIELD_FLAG,
+            "call_trace": call_trace,
+        }
     )
     try:
         response = requests.post(url, data=payload, timeout=_DEFAULT_REQUESTS_TIMEOUT)
