@@ -85,23 +85,28 @@ def _get_blg_df_from_api(
     )
     call_trace = traceback.extract_stack()
     call_trace = traceback.format_list(call_trace[-5:])
-    db = get_pnl_db()
-    db.bloomberg_call_logs.insert_one(
-        {
+    log = {
             "timestamp": datetime.datetime.utcnow(),
             "hits": len(tickers) * len(fields),
-            "tickers": tickers,
-            "fields": fields,
-            "YAS_YIELD_FLAG": YAS_YIELD_FLAG,
+            "ticker_count": len(tickers),
+            "field_count": len(fields),
             "call_trace": call_trace,
         }
-    )
+    db = get_pnl_db()
     try:
         response = requests.post(url, data=payload, timeout=_DEFAULT_REQUESTS_TIMEOUT)
     except requests.exceptions.ConnectTimeout as exc:
+        log["status"] = str(exc)
+        df = pd.DataFrame()
         raise UnableToConnect("Connection timed out")
-    df = pd.DataFrame(response.json())
-    return df
+    else:
+        df = pd.DataFrame(response.json())
+        log["n_rows"] = df.shape[0]
+        log["n_columns"] = df.shape[1]
+    finally:
+        db.bloomberg_call_logs.insert_one(log
+        )
+        return df
 
 
 def bdp_wrapper(tickers=[], fields=[], YAS_YIELD_FLAG=None):
