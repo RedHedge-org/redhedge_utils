@@ -84,7 +84,7 @@ def _get_blg_df_from_api(
         {"tickers": tickers, "fields": fields, "YAS_YIELD_FLAG": YAS_YIELD_FLAG}
     )
     call_trace = traceback.extract_stack()
-    call_trace = f"{'\n'.join(traceback.format_list(call_trace[-5:]))}"
+    call_trace = traceback.format_list(call_trace[-5:])
     db = get_pnl_db()
     db.bloomberg_call_logs.insert_one(
         {
