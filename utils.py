@@ -110,14 +110,15 @@ def _get_blg_df_from_api(
     try:
         response = requests.post(url, data=payload, timeout=_DEFAULT_REQUESTS_TIMEOUT)
     except requests.exceptions.ConnectTimeout as exc:
-        log["status"] = str(exc)
-        df = pd.DataFrame()
+        log["exception"] = str(exc)
+        log["status"] = "exception"
+        db.bloomberg_call_logs.insert_one(log)
         raise UnableToConnect("Connection timed out")
     else:
         df = pd.DataFrame(response.json())
         log["n_rows"] = df.shape[0]
         log["n_columns"] = df.shape[1]
-    finally:
+        log["status"] = "OK"
         db.bloomberg_call_logs.insert_one(log)
         return df
 
@@ -138,59 +139,62 @@ def bdp_wrapper(tickers=[], fields=[], YAS_YIELD_FLAG=None):
     return df
 
 
-def bdh_wrapper(tickers=[], fields=[], start_date=None, end_date=None):
+def bdh_wrapper(
+    tickers: list = [],
+    fields: list = [],
+    start_date: datetime.date = datetime.date.today() - datetime.timedelta(days=1),
+    end_date: datetime.date = datetime.date.today(),
+):
     """wrapper for the function to check if the function is running locally or not"""
     env_var = "bloomberg-api-url"
     url = get_env(env_var) + "/timeseries"
-    print("getting data from url: ", url)
-    print("tickers: ", tickers)
-    print("fields: ", fields)
-    print("start_date: ", start_date)
-    print("end_date: ", end_date)
-    response = requests.post(
-        url,
-        json={
-            "tickers": tickers,
-            "fields": fields,
-            "start_date": start_date,
-            "end_date": end_date,
-        },
-    )
-    # the response looks like this:
-    # {
-    #     "('BE6334364708 Corp', 'Last_Price')": {
-    #         "1664755200000": 88.946,
-    #         "1664841600000": 89.186,
-    #         "1664928000000": 89.051,
-    #         "1665014400000": 89.035,
-    #         "1665100800000": 88.961
-    #     },
-    #     "('BE6328904428 Corp', 'Last_Price')": {
-    #         "1664755200000": 73.27,
-    #         "1664841600000": 74.0,
-    #         "1664928000000": 73.577,
-    #         "1665014400000": 73.453,
-    #         "1665100800000": 73.165
-    #     }
-    # }
-    # convert the response to be saved as a timeseries in mongo
-    # example:
-    #  {
-    #   "date": ISODate("2020-01-03T05:00:00.000Z"),
-    #   "isin": "BE6334364708"
-    #   "i_spread": 0.24,
-    #   "price": 88.946
-    #  }
-    df = pd.DataFrame()
-    for key, value in response.json().items():
-        isin, field = key.replace("(", "").replace(")", "").replace("'", "").split(",")
-        field = field.strip()
-        df_temp = pd.DataFrame.from_dict(value, orient="index", columns=[field])
-        df_temp.index = pd.to_datetime(df_temp.index, unit="ms")
-        df_temp["isin"] = correlation_id_to_isin(isin)
-        df = df.append(df_temp)
-    df = df.reset_index().rename(columns={"index": "date"})
-    return df
+    n_tickers = len(tickers)
+    n_fields = len(fields)
+    n_days = (end_date - start_date).days
+    n_hits = n_tickers * n_fields * n_days
+    call_trace = traceback.extract_stack()
+    call_trace = traceback.format_list(call_trace[-5:])
+    log = {
+        "event_datetime": datetime.datetime.utcnow(),
+        "n_tickers": n_tickers,
+        "n_fields": n_fields,
+        "n_days": n_days,
+        "n_hits": n_hits,
+        "call_trace": call_trace,
+    }
+    uri = get_mongo_uri()
+    client = pymongo.MongoClient(uri)
+    db = client.logs
+    collection = db.bdh_api_call_logs
+    try:
+        response = requests.post(
+            url,
+            json={
+                "tickers": tickers,
+                "fields": fields,
+                "start_date": start_date.isoformat(),
+                "end_date": end_date.isoformat(),
+            },
+        )
+    except Exception as exc:
+        log["exception"] = str(exc)
+        log["status"] = "exception"
+        collection.insert_one(log)
+        raise UnableToConnect("bdh call failed")
+    else:
+        df = []
+        for key, value in response.json().items():
+            isin, field = key.replace("(", "").replace(")", "").replace("'", "").split(",")
+            field = field.strip()
+            df_temp = pd.DataFrame.from_dict(value, orient="index", columns=[field])
+            df_temp.index = pd.to_datetime(df_temp.index, unit="ms")
+            df_temp["isin"] = correlation_id_to_isin(isin)
+            df.append(df_temp)
+        df = pd.concat(df)
+        df = df.reset_index().rename(columns={"index": "date"})
+        log["status"] = "OK"
+        collection.insert_one(log)
+        return df
 
 
 def get_dataframe_from_csv_string(csv_content: str, **kwargs) -> pd.DataFrame:
