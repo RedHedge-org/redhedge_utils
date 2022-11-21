@@ -50,6 +50,20 @@ def get_pnl_db(use_test_db: bool = False) -> pymongo.database.Database:
     return db
 
 
+def does_collection_exist(db: pymongo.database.Database, collection_name: str):
+    collection_names = db.list_collection_names()
+    return collection_name in collection_names
+
+
+def create_collection_if_non_existent(
+    db: pymongo.database.Database, collection_name: str, **kwargs
+) -> pymongo.collection.Collection:
+    if not does_collection_exist(db=db, collection_name=collection_name):
+        db.create_collection(collection_name, **kwargs)
+    collection = db.get_collection(collection_name)
+    return collection
+
+
 def is_local():
     """check if the function is running locally."""
     return os.environ.get("ENVIRONMENT", None) == _KEY_LOCAL_ENVIRONMENT
@@ -86,12 +100,12 @@ def _get_blg_df_from_api(
     call_trace = traceback.extract_stack()
     call_trace = traceback.format_list(call_trace[-5:])
     log = {
-            "timestamp": datetime.datetime.utcnow(),
-            "hits": len(tickers) * len(fields),
-            "ticker_count": len(tickers),
-            "field_count": len(fields),
-            "call_trace": call_trace,
-        }
+        "timestamp": datetime.datetime.utcnow(),
+        "hits": len(tickers) * len(fields),
+        "ticker_count": len(tickers),
+        "field_count": len(fields),
+        "call_trace": call_trace,
+    }
     db = get_pnl_db()
     try:
         response = requests.post(url, data=payload, timeout=_DEFAULT_REQUESTS_TIMEOUT)
@@ -104,8 +118,7 @@ def _get_blg_df_from_api(
         log["n_rows"] = df.shape[0]
         log["n_columns"] = df.shape[1]
     finally:
-        db.bloomberg_call_logs.insert_one(log
-        )
+        db.bloomberg_call_logs.insert_one(log)
         return df
 
 
