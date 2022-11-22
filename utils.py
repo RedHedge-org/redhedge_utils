@@ -128,7 +128,7 @@ def bdp_wrapper(tickers=[], fields=[], YAS_YIELD_FLAG=None):
     env_var = "bloomberg-api-url"
     url = get_env(env_var)
     if url is not None:
-        df = _get_blg_df_from_api(url=url, tickers=tickers, fields=fields)
+        df = _get_blg_df_from_api(url=url, tickers=tickers, fields=fields, YAS_YIELD_FLAG=YAS_YIELD_FLAG)
     else:
         if is_local():
             df = _get_blg_df_random(tickers=tickers, fields=fields)
