@@ -42,6 +42,12 @@ def get_latest_email(subject):
 def get_data_frame_from_latest_email(subject):
     email = get_latest_email(subject)
     msg = email_parser.Parser().parsestr(email.decode("utf-8"))
+    received_date = msg["Received"]
+    received_date = received_date.split(";")[1].strip()
+    sent_date = msg["Date"]
+    received_date = pd.to_datetime(received_date)
+    received_date = received_date.tz_convert("UTC")
+    sent_date = pd.to_datetime(sent_date)
     payload = None
     df = None
     for part in msg.get_payload():
@@ -52,4 +58,6 @@ def get_data_frame_from_latest_email(subject):
             pass
         if df is not None:
             break
+    df["received_date"] = received_date
+    df["sent_date"] = sent_date
     return df
