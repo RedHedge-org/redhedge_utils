@@ -40,15 +40,15 @@ def get_latest_email(subject):
     return data[0][1]
 
 
-def get_previous_received_date(subject: str) -> datetime.datetime or None:
+def get_previous_sent_date(subject: str) -> datetime.datetime or None:
     db = get_pnl_db(use_test_db=False)
     collection = db.log_last_used_emails
     last_email = collection.find_one({"subject": subject})
     try:
-        previous_received_date = last_email["received_date"]
+        previous_sent_date = last_email["sent_date"]
     except TypeError as exc:
-        previous_received_date = None
-    return previous_received_date
+        previous_sent_date = None
+    return previous_sent_date
 
 
 def log_last_used_email(
