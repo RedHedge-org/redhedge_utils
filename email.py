@@ -1,7 +1,7 @@
 """
 Utilities to read Emails on the bot accout.
 """
-
+import datetime
 import email.parser as email_parser
 import imaplib
 from io import StringIO
@@ -9,9 +9,9 @@ from io import StringIO
 import pandas as pd
 
 try:
-    from utils import get_env
+    from utils import get_env, get_pnl_db
 except ImportError as exc:
-    from .utils import get_env
+    from .utils import get_env, get_pnl_db
 
 
 def get_email_login():
@@ -39,7 +39,18 @@ def get_latest_email(subject):
     return data[0][1]
 
 
-def get_data_frame_from_latest_email(subject):
+def get_previous_received_date(subject: str) -> datetime.datetime or None:
+    db = get_pnl_db(use_test_db=False)
+    collection = db.log_last_used_emails
+    last_email = collection.find_one({"subject": subject})
+    try:
+        previous_received_date = last_email["received_date"]
+    except TypeError as exc:
+        previous_received_date = None
+    return previous_received_date
+
+
+def get_data_frame_from_latest_email(subject: str):
     email = get_latest_email(subject)
     msg = email_parser.Parser().parsestr(email.decode("utf-8"))
     received_date = msg["Received"]
