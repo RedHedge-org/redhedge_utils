@@ -7,6 +7,7 @@ import imaplib
 from io import StringIO
 
 import pandas as pd
+import pymongo
 
 try:
     from utils import get_env, get_pnl_db
@@ -48,6 +49,19 @@ def get_previous_received_date(subject: str) -> datetime.datetime or None:
     except TypeError as exc:
         previous_received_date = None
     return previous_received_date
+
+
+def log_last_used_email(
+    db: pymongo.database.Database,
+    subject: str,
+    received_date: datetime.datetime,
+    sent_date: datetime.datetime,
+) -> None:
+    db.log_last_used_emails.update_one(
+        {"subject": subject},
+        {"$set": {"received_date": received_date, "sent_date": sent_date}},
+        upsert=True,
+    )
 
 
 def get_data_frame_from_latest_email(subject: str):
