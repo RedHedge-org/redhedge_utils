@@ -196,7 +196,7 @@ def bdh_wrapper(
             df = pd.concat(df)
             df = df.reset_index().rename(columns={"index": "date"})
         else:
-            df = pd.DataFrame(columns=[ticker.lower() for ticker in tickers])
+            df = pd.DataFrame(columns=[field.lower() for field in fields])
         log["status"] = "OK"
         collection.insert_one(log)
         return df
