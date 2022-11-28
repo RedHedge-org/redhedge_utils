@@ -120,6 +120,7 @@ def _get_blg_df_from_api(
         log["n_columns"] = df.shape[1]
         log["status"] = "OK"
         db.bloomberg_call_logs.insert_one(log)
+        fields = [field.lower() for field in fields]
         if all(field in df.columns for field in fields):
             return df
         else:
