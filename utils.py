@@ -195,14 +195,19 @@ def bdh_wrapper(
     else:
         df = []
         for key, value in response.json().items():
-            isin, field = key.replace("(", "").replace(")", "").replace("'", "").split(",")
+            isin, field = (
+                key.replace("(", "").replace(")", "").replace("'", "").split(",")
+            )
             field = field.strip()
             df_temp = pd.DataFrame.from_dict(value, orient="index", columns=[field])
             df_temp.index = pd.to_datetime(df_temp.index, unit="ms")
             df_temp["isin"] = correlation_id_to_isin(isin)
             df.append(df_temp)
-        df = pd.concat(df)
-        df = df.reset_index().rename(columns={"index": "date"})
+        if df:
+            df = pd.concat(df)
+            df = df.reset_index().rename(columns={"index": "date"})
+        else:
+            df = pd.DataFrame(columns=[field.lower() for field in fields] + ["isin"])
         log["status"] = "OK"
         collection.insert_one(log)
         return df
