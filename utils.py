@@ -184,7 +184,9 @@ def bdh_wrapper(
     else:
         df = []
         for key, value in response.json().items():
-            isin, field = key.replace("(", "").replace(")", "").replace("'", "").split(",")
+            isin, field = (
+                key.replace("(", "").replace(")", "").replace("'", "").split(",")
+            )
             field = field.strip()
             df_temp = pd.DataFrame.from_dict(value, orient="index", columns=[field])
             df_temp.index = pd.to_datetime(df_temp.index, unit="ms")
@@ -194,7 +196,7 @@ def bdh_wrapper(
             df = pd.concat(df)
             df = df.reset_index().rename(columns={"index": "date"})
         else:
-            df = pd.DataFrame()
+            df = pd.DataFrame(columns=[ticker.lower() for ticker in tickers])
         log["status"] = "OK"
         collection.insert_one(log)
         return df
