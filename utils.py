@@ -190,8 +190,11 @@ def bdh_wrapper(
             df_temp.index = pd.to_datetime(df_temp.index, unit="ms")
             df_temp["isin"] = correlation_id_to_isin(isin)
             df.append(df_temp)
-        df = pd.concat(df)
-        df = df.reset_index().rename(columns={"index": "date"})
+        if df:
+            df = pd.concat(df)
+            df = df.reset_index().rename(columns={"index": "date"})
+        else:
+            df = pd.DataFrame()
         log["status"] = "OK"
         collection.insert_one(log)
         return df
