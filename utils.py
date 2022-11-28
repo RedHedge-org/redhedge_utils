@@ -120,7 +120,17 @@ def _get_blg_df_from_api(
         log["n_columns"] = df.shape[1]
         log["status"] = "OK"
         db.bloomberg_call_logs.insert_one(log)
-        return df
+        if all(field in df.columns for field in fields):
+            return df
+        else:
+            if df.empty:
+                # Preserve the empty property of the DataFrame
+                return pd.DataFrame(columns=fields)
+            else:
+                for field in fields:
+                    if field not in df.columns:
+                        df[field] = None
+                return df
 
 
 def bdp_wrapper(tickers=[], fields=[], YAS_YIELD_FLAG=None):
