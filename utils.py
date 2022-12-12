@@ -139,7 +139,9 @@ def bdp_wrapper(tickers=[], fields=[], YAS_YIELD_FLAG=None):
     env_var = "bloomberg-api-url"
     url = get_env(env_var)
     if url is not None:
-        df = _get_blg_df_from_api(url=url, tickers=tickers, fields=fields, YAS_YIELD_FLAG=YAS_YIELD_FLAG)
+        df = _get_blg_df_from_api(
+            url=url, tickers=tickers, fields=fields, YAS_YIELD_FLAG=YAS_YIELD_FLAG
+        )
     else:
         if is_local():
             df = _get_blg_df_random(tickers=tickers, fields=fields)
@@ -311,6 +313,27 @@ _PATTERN_WHITESPACES = re.compile(r"\s+")
 
 def nullify_whitespaces(df: pd.DataFrame) -> None:
     df.replace({_PATTERN_WHITESPACES: None}, inplace=True)
+
+
+def get_all_features() -> pd.DataFrame:
+    uri = get_mongo_uri()
+    db = pymongo.MongoClient(uri).regression
+    data = (
+        pd.DataFrame(db.regression_daily_fields.find())
+        .drop(columns="_id")
+        .pivot(index="isin", columns="field_name", values="value")
+        .reset_index()
+    )
+    features = (
+        pd.DataFrame(db.regression_engineered_features.find())
+        .drop(columns="_id")
+        .pivot(index="isin", columns="field_name", values="value")
+        .reset_index()
+    )
+    data = pd.merge(
+        left=data, right=features, on="isin", how="left", validate="one_to_one"
+    )
+    return data
 
 
 if __name__ == "__main__":
