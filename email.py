@@ -79,6 +79,11 @@ def get_data_frame_from_latest_email(subject: str):
         payload = part.get_payload(decode=True)
         try:
             df = pd.read_csv(StringIO(payload.decode("utf-8")))
+            # If the email has a text body,
+            # df will have a single column and no rows;
+            # keep reading until we get a df with rows.
+            if (0, 1) == df.shape:
+                continue
         except Exception as exc:
             pass
         if df is not None:
